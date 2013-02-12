@@ -1,4 +1,4 @@
-//Very dumb Gopher server. Only types 0 1 3 4 5 6 9 h g s I supported.
+//Very dumb Gopher server. Only types 0 1 3 4 5 6 7 9 h g s I supported.
 
 var net = require('net');
 var fs = require('fs');
@@ -91,34 +91,38 @@ function answerError(sock, text) {
 
 function printList(sock, path, query, entries) {
     var answer = "";
-    for (var i = 0; i < entries.length; i++) {
-        var entry = entries[i];
-        var stat = fs.statSync(path + '/' + entry);
-        if (stat.isDirectory()) {
-            answer += "1";
-        } else {
-            var mt = mime.lookup(entry);
-            if ((mt.indexOf('text/html') == 0) || (mt.indexOf('application/xhtml+xml') == 0)) {
-                answer += 'h';
-            } else if (mt.indexOf('uue') > -1) {
-                answer += '6';
-            } else if (mt.indexOf('text/') == 0) {
-                answer += '0';
-            } else if (mt.indexOf('image/gif') == 0) {
-                answer += 'g';
-            } else if (mt.indexOf('image/') == 0) {
-                answer += 'I';
-            } else if (mt.indexOf('audio/') == 0) {
-                answer += 's';
-            } else if (mt.indexOf('binhex') > -1) {
-                answer += '4';
-            } else if ((mt.indexOf('compressed') > -1) || (mt.indexOf('archive') > -1)) {
-                answer += '5';
+    if (entries.length == 0) {
+        answerInfo(sock, 'Nothing to display here');
+    } else {
+        for (var i = 0; i < entries.length; i++) {
+            var entry = entries[i];
+            var stat = fs.statSync(path + '/' + entry);
+            if (stat.isDirectory()) {
+                answer += "1";
             } else {
-                answer += '9';
+                var mt = mime.lookup(entry);
+                if ((mt.indexOf('text/html') == 0) || (mt.indexOf('application/xhtml+xml') == 0)) {
+                    answer += 'h';
+                } else if (mt.indexOf('uue') > -1) {
+                    answer += '6';
+                } else if (mt.indexOf('text/') == 0) {
+                    answer += '0';
+                } else if (mt.indexOf('image/gif') == 0) {
+                    answer += 'g';
+                } else if (mt.indexOf('image/') == 0) {
+                    answer += 'I';
+                } else if (mt.indexOf('audio/') == 0) {
+                    answer += 's';
+                } else if (mt.indexOf('binhex') > -1) {
+                    answer += '4';
+                } else if ((mt.indexOf('compressed') > -1) || (mt.indexOf('archive') > -1)) {
+                    answer += '5';
+                } else {
+                    answer += '9';
+                }
             }
+            answer += entry + TAB + query + '/' + entry + TAB + SERVER + TAB + PORT + "\r\n";
         }
-        answer += entry + TAB + query + '/' + entry + TAB + SERVER + TAB + PORT + "\r\n";
     }
     answer += '7Search in this directory and all subdirectories...' + TAB + query + TAB + SERVER + TAB + PORT + "\r\n";
     answer += EOF;
