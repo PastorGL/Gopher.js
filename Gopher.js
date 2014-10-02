@@ -61,16 +61,15 @@ function handleQuery(query, sock) {
     var path = fs.realpathSync(query == '' ? ROOT_DIR + '/' : ROOT_DIR + query);
 
         console.log('Handling path query ' + path);
-
-        fs.exists(path, function (exists) {
-            if (!exists) {
-                answerError(sock, 'File ' + path + " doesn't exists");
-                return;
-            }
-        });
-
+        
         fs.stat(path, function (err, stats) {
-            if (stats.isDirectory()) {
+            if (error) {
+                if (error.code === 'ENOENT') {
+                    answerError(sock, 'File ' + path + " doesn't exists");
+                } else {
+                    answerError(sock, error.message);
+                }
+            } else if (stats.isDirectory()) {
                 answerDirList(sock, query, path);
             } else {
                 fs.readFile(path, function (err, data) {
